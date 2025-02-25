@@ -14,11 +14,12 @@ const id = '0000000000000000000000000000000000000000000000000000000000000000';
 
 describe('PublicStatusHandler', () => {
   let mockDataSource: Partial<DataSource>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockRepository: any;
 
   beforeEach(() => {
     // Clear any previous instance
-    // @ts-ignore: allowing access for tests
+    // @ts-ignore
     PublicStatusHandler['instance'] = undefined;
 
     // Reset all mocks
@@ -48,10 +49,10 @@ describe('PublicStatusHandler', () => {
      * - instance.txRepository should have been set to the repository returned by dataSource.getRepository
      */
     it('should initialize the PublicStatusHandler instance with a valid dataSource', async () => {
-      // Act
+      // act
       await PublicStatusHandler.init(mockDataSource as DataSource);
 
-      // Assert
+      // assert
       const instance = PublicStatusHandler.getInstance();
       expect(instance).toBeDefined();
       expect(instance.axios.defaults.baseURL).toEqual(
@@ -73,7 +74,7 @@ describe('PublicStatusHandler', () => {
      * - an error should have been thrown with correct error message
      */
     it('should throw an error when getInstance is called before init', () => {
-      // @ts-ignore: accessing private property for testing purpose
+      // @ts-ignore
       PublicStatusHandler['instance'] = undefined;
       expect(() => PublicStatusHandler.getInstance()).toThrowError(
         'PublicStatusHandler should have been initialized before getInstance'
@@ -92,7 +93,7 @@ describe('PublicStatusHandler', () => {
     it('should return the existing instance when getInstance is called after init', async () => {
       await PublicStatusHandler.init(mockDataSource as DataSource);
       const instance = PublicStatusHandler.getInstance();
-      // @ts-ignore: accessing private property for testing purpose
+      // @ts-ignore
       expect(instance).toEqual(PublicStatusHandler['instance']);
     });
   });
@@ -131,7 +132,7 @@ describe('PublicStatusHandler', () => {
      *   - signature equal to the stubbed signature
      */
     it('should call axios.post with the correct payload when submitRequest is called', async () => {
-      // Arrange
+      // arrange
       const stubbedPk = 'stubbed-pk';
       const stubbedSignature = 'stubbed-signature';
       vi.spyOn(Configs.tssKeys.encryptor, 'getPk').mockResolvedValue(stubbedPk);
@@ -142,14 +143,14 @@ describe('PublicStatusHandler', () => {
         .spyOn(instance.axios, 'post')
         .mockResolvedValue({ data: {} });
       const signMessage = 'test-sign-message';
-      const dtoToSignMessageSpy = vi
-        .spyOn(instance, 'dtoToSignMessage')
+      const dtoToSignMessageSpy = vi // @ts-ignore
+        .spyOn(instance, 'dtoToSignMessage') // @ts-ignore
         .mockReturnValue(signMessage);
 
-      // Act
-      await instance.submitRequest(validDto);
+      // act
+      await instance['submitRequest'](validDto);
 
-      // Assert
+      // assert
       expect(dtoToSignMessageSpy).toHaveBeenCalledWith(validDto);
       expect(signSpy).toHaveBeenCalledWith(signMessage);
       expect(axiosPostSpy).toHaveBeenCalledWith('/status', {
@@ -175,7 +176,7 @@ describe('PublicStatusHandler', () => {
      * - logger.error should have been called with the error thrown by axios.post
      */
     it('should log an error when axios.post fails', async () => {
-      // Arrange
+      // arrange
       const stubError = new Error('network error');
       vi.spyOn(Configs.tssKeys.encryptor, 'getPk').mockResolvedValue(
         'stubbed-pk'
@@ -190,10 +191,10 @@ describe('PublicStatusHandler', () => {
           //
         });
 
-      // Act
-      await instance.submitRequest(validDto);
+      // act
+      await instance['submitRequest'](validDto);
 
-      // Assert
+      // assert
       expect(loggerErrorSpy).toHaveBeenCalledWith(stubError);
     });
   });
@@ -206,6 +207,7 @@ describe('PublicStatusHandler', () => {
       await PublicStatusHandler.init(mockDataSource as DataSource);
       instance = PublicStatusHandler.getInstance();
       // Stub submitRequest to track calls without executing the real implementation
+      // @ts-ignore
       vi.spyOn(instance, 'submitRequest').mockResolvedValue(undefined);
     });
 
@@ -219,10 +221,10 @@ describe('PublicStatusHandler', () => {
      * - an error should have been thrown with the correct message
      */
     it('should throw an error when status is either "inPayment" or "inReward" and no transaction is found', async () => {
-      // Arrange
+      // arrange
       (mockRepository.findOne as Mock).mockResolvedValue(null);
 
-      // Act & Assert
+      // act & Assert
       await expect(
         instance.updatePublicEventStatus(eventId, EventStatus.inPayment)
       ).rejects.toThrowError(
@@ -244,7 +246,7 @@ describe('PublicStatusHandler', () => {
      *   - txStatus equals the transaction's status
      */
     it('should call submitRequest with the dto including transaction details when status is "inPayment" and a valid transaction is found', async () => {
-      // Arrange
+      // arrange
       const transactionStub = {
         txId: 'tx-123',
         type: TransactionType.payment,
@@ -252,10 +254,11 @@ describe('PublicStatusHandler', () => {
       };
       (mockRepository.findOne as Mock).mockResolvedValue(transactionStub);
 
-      // Act
+      // act
       await instance.updatePublicEventStatus(eventId, EventStatus.inPayment);
 
-      // Assert
+      // assert
+      // @ts-ignore
       expect(instance.submitRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId,
@@ -281,7 +284,7 @@ describe('PublicStatusHandler', () => {
      *   - txStatus equals the transaction's status
      */
     it('should call submitRequest with the dto including transaction details when status is "inReward" and a valid transaction is found', async () => {
-      // Arrange
+      // arrange
       const transactionStub = {
         txId: 'tx-456',
         type: TransactionType.reward,
@@ -289,10 +292,11 @@ describe('PublicStatusHandler', () => {
       };
       (mockRepository.findOne as Mock).mockResolvedValue(transactionStub);
 
-      // Act
+      // act
       await instance.updatePublicEventStatus(eventId, EventStatus.inReward);
 
-      // Assert
+      // assert
+      // @ts-ignore
       expect(instance.submitRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId,
@@ -318,13 +322,14 @@ describe('PublicStatusHandler', () => {
      *   - eventId and status match the provided parameters
      */
     it('should call submitRequest with the dto without transaction details when status is neither "inPayment" nor "inReward"', async () => {
-      // Arrange
+      // arrange
       const status = 'pendingPayment';
 
-      // Act
+      // act
       await instance.updatePublicEventStatus(eventId, status);
 
-      // Assert
+      // assert
+      // @ts-ignore
       expect(instance.submitRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId,
@@ -346,6 +351,7 @@ describe('PublicStatusHandler', () => {
       await PublicStatusHandler.init(mockDataSource as DataSource);
       instance = PublicStatusHandler.getInstance();
       // Stub submitRequest to track calls
+      // @ts-ignore
       vi.spyOn(instance, 'submitRequest').mockResolvedValue(undefined);
     });
 
@@ -359,10 +365,10 @@ describe('PublicStatusHandler', () => {
      * - an error should have been thrown with the correct message
      */
     it('should throw an error when no transaction with the given txId is found', async () => {
-      // Arrange
+      // arrange
       (mockRepository.findOne as Mock).mockResolvedValue(null);
 
-      // Act & Assert
+      // act & Assert
       await expect(
         instance.updatePublicTxStatus(txId, newTxStatus)
       ).rejects.toThrowError(
@@ -389,7 +395,7 @@ describe('PublicStatusHandler', () => {
      *   - txStatus equals the provided txStatus
      */
     it('should call submitRequest with the dto built from the found transaction details when a valid transaction is found', async () => {
-      // Arrange
+      // arrange
       const transactionStub = {
         txId,
         type: 'some-tx-type',
@@ -401,10 +407,11 @@ describe('PublicStatusHandler', () => {
       };
       (mockRepository.findOne as Mock).mockResolvedValue(transactionStub);
 
-      // Act
+      // act
       await instance.updatePublicTxStatus(txId, newTxStatus);
 
-      // Assert
+      // assert
+      // @ts-ignore
       expect(instance.submitRequest).toHaveBeenCalledWith(
         expect.objectContaining({
           eventId: transactionStub.event.id,

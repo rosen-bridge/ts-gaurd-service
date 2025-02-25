@@ -1,10 +1,10 @@
-import Configs from '../configs/Configs';
-import { DefaultLoggerFactory } from '@rosen-bridge/abstract-logger';
-import axios, { AxiosInstance } from 'axios';
-import { EventStatus, TransactionStatus } from 'src/utils/constants';
-import { TransactionType } from '@rosen-chains/abstract-chain';
 import { DataSource, Not, Repository } from 'typeorm';
-import { TransactionEntity } from 'src/db/entities/TransactionEntity';
+import axios, { AxiosInstance } from 'axios';
+import { DefaultLoggerFactory } from '@rosen-bridge/abstract-logger';
+import { TransactionType } from '@rosen-chains/abstract-chain';
+import Configs from '../configs/Configs';
+import { EventStatus, TransactionStatus } from '../utils/constants';
+import { TransactionEntity } from '../db/entities/TransactionEntity';
 
 export const logger = DefaultLoggerFactory.getInstance().getLogger(
   import.meta.url
@@ -56,7 +56,8 @@ class PublicStatusHandler {
    * @param dto
    * @returns string
    */
-  dtoToSignMessage = (dto: UpdateStatusDTO): string => {
+  protected dtoToSignMessage = (dto: UpdateStatusDTO): string => {
+    // TODO: move this fn with UpdateStatusDTO
     return `${dto.eventId}${dto.status}${dto.txId ?? ''}${dto.txType ?? ''}${
       dto.txStatus ?? ''
     }${dto.date}`;
@@ -67,7 +68,7 @@ class PublicStatusHandler {
    * @param dto - UpdateStatusDTO containing the update status details
    * @returns promise of void
    */
-  submitRequest = async (dto: UpdateStatusDTO): Promise<void> => {
+  protected submitRequest = async (dto: UpdateStatusDTO): Promise<void> => {
     const signMessage = this.dtoToSignMessage(dto);
 
     try {
