@@ -26,8 +26,6 @@ import {
 } from '@rosen-bridge/evm-address-tx-extractor';
 import { ArbitraryEntity } from './entities/ArbitraryEntity';
 import { ReprocessEntity } from './entities/ReprocessEntity';
-import { TransactionSubscriber } from './subscribers/TransactionSubscriber';
-import { ConfirmedEventSubscriber } from './subscribers/ConfirmedEventSubscriber';
 
 const dbType = Configs.dbType as keyof typeof migrations;
 const dbConfigs = {
@@ -52,7 +50,6 @@ const dbConfigs = {
     ...addressTxExtractorMigrations[dbType],
     ...migrations[dbType],
   ],
-  subscribers: [ConfirmedEventSubscriber, TransactionSubscriber],
   synchronize: false,
   logging: false,
 };

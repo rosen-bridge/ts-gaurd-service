@@ -33,8 +33,6 @@ import {
 import { ArbitraryEntity } from '../../../src/db/entities/ArbitraryEntity';
 import { ReprocessEntity } from '../../../src/db/entities/ReprocessEntity';
 import { ReprocessStatus } from '../../../src/reprocess/Interfaces';
-import { TransactionSubscriber } from '../../../src/db/subscribers/TransactionSubscriber';
-import { ConfirmedEventSubscriber } from '../../../src/db/subscribers/ConfirmedEventSubscriber';
 
 const logger = DefaultLoggerFactory.getInstance().getLogger(import.meta.url);
 
@@ -62,7 +60,6 @@ class DatabaseActionMock {
       ...addressTxExtractorMigrations.sqlite,
       ...migrations.sqlite,
     ],
-    subscribers: [ConfirmedEventSubscriber, TransactionSubscriber],
     synchronize: false,
     logging: false,
   });
@@ -166,6 +163,7 @@ class DatabaseActionMock {
       .insert()
       .values({
         id: Utils.txIdToEventId(event.sourceTxId),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         eventData: eventData!,
         status: status,
         firstTry: firstTry,

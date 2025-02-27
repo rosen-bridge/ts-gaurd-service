@@ -40,6 +40,7 @@ import { ArbitraryEntity } from './entities/ArbitraryEntity';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { ReprocessEntity } from './entities/ReprocessEntity';
 import { ReprocessStatus } from '../reprocess/Interfaces';
+import PublicStatusHandler from '../handlers/PublicStatusHandler';
 
 const logger = DefaultLoggerFactory.getInstance().getLogger(import.meta.url);
 
@@ -122,6 +123,8 @@ class DatabaseAction {
         { id: eventId },
         { status: status }
       );
+
+    this.updatePublicEventStatus(eventId, status);
   };
 
   /**
@@ -202,6 +205,7 @@ class DatabaseAction {
         lastStatusUpdate: String(Math.round(Date.now() / 1000)),
       }
     );
+    this.updatePublicTxStatus(txId, status);
   };
 
   /**
@@ -221,6 +225,7 @@ class DatabaseAction {
         failedInSign: true,
       }
     );
+    this.updatePublicTxStatus(txId, TransactionStatus.signFailed);
   };
 
   /**
@@ -251,6 +256,7 @@ class DatabaseAction {
       { id: eventId },
       { status: status, firstTry: String(Math.round(Date.now() / 1000)) }
     );
+    this.updatePublicEventStatus(eventId, status);
   };
 
   /**
@@ -286,6 +292,7 @@ class DatabaseAction {
         lastCheck: currentHeight,
       }
     );
+    this.updatePublicTxStatus(txId, TransactionStatus.signed);
   };
 
   /**
@@ -331,6 +338,7 @@ class DatabaseAction {
         failedInSign: false,
       }
     );
+    this.updatePublicTxStatus(tx.txId, TransactionStatus.approved);
   };
 
   /**
@@ -386,6 +394,7 @@ class DatabaseAction {
       signFailedCount: 0,
       requiredSign: requiredSign,
     });
+    this.updatePublicTxStatus(paymentTx.txId, TransactionStatus.approved);
   };
 
   /**
@@ -411,6 +420,7 @@ class DatabaseAction {
       signFailedCount: 0,
       requiredSign: requiredSign,
     });
+    this.updatePublicTxStatus(paymentTx.txId, TransactionStatus.completed);
   };
 
   /**
@@ -448,12 +458,17 @@ class DatabaseAction {
   insertConfirmedEvent = async (
     eventData: EventTriggerEntity
   ): Promise<void> => {
+    const eventId = Utils.txIdToEventId(eventData.sourceTxId);
+    const status = EventStatus.pendingPayment;
+
     await this.ConfirmedEventRepository.insert({
-      id: Utils.txIdToEventId(eventData.sourceTxId),
+      id: eventId,
       eventData: eventData,
-      status: EventStatus.pendingPayment,
+      status,
       firstTry: String(Math.round(Date.now() / 1000)),
     });
+
+    this.updatePublicEventStatus(eventId, status);
   };
 
   /**
@@ -997,6 +1012,38 @@ class DatabaseAction {
         status: status,
       }
     );
+  };
+
+  /**
+   * updates the public status of an event
+   * @param eventId
+   * @param status
+   */
+  updatePublicEventStatus = async (eventId: string, status: EventStatus) => {
+    try {
+      await PublicStatusHandler.getInstance().updatePublicEventStatus(
+        eventId,
+        status
+      );
+    } catch (error) {
+      // TODO: log?
+    }
+  };
+
+  /**
+   * updates the public status of a tx
+   * @param txId
+   * @param txStatus
+   */
+  updatePublicTxStatus = async (txId: string, txStatus: TransactionStatus) => {
+    try {
+      await PublicStatusHandler.getInstance().updatePublicTxStatus(
+        txId,
+        txStatus
+      );
+    } catch (error) {
+      // TODO: log?
+    }
   };
 }
 

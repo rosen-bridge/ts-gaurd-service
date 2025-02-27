@@ -13,11 +13,11 @@ export const logger = DefaultLoggerFactory.getInstance().getLogger(
 // TODO: where should this go? need to be shared with api
 export type UpdateStatusDTO = {
   date: number;
-  eventId: string | undefined;
-  status: string | undefined;
+  eventId: string;
+  status: EventStatus;
   txId: string | undefined;
   txType: string | undefined;
-  txStatus: string | undefined;
+  txStatus: TransactionStatus | undefined;
 };
 
 class PublicStatusHandler {
@@ -92,7 +92,7 @@ class PublicStatusHandler {
    */
   updatePublicEventStatus = async (
     eventId: string,
-    status: string
+    status: EventStatus
   ): Promise<void> => {
     let txId: string | undefined;
     let txType: string | undefined;
@@ -144,16 +144,14 @@ class PublicStatusHandler {
    */
   updatePublicTxStatus = async (
     txId: string,
-    txStatus: string
+    txStatus: TransactionStatus
   ): Promise<void> => {
-    let eventId: string | undefined;
-    let status: string | undefined;
     let txType: string | undefined;
 
     const dto = {
       date: Date.now(),
-      eventId,
-      status,
+      eventId: '',
+      status: EventStatus.pendingPayment,
       txId,
       txType,
       txStatus,

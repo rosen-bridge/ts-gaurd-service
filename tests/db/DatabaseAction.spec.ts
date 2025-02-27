@@ -21,6 +21,7 @@ import * as TxTestData from '../agreement/testData';
 import { TransactionType } from '@rosen-chains/abstract-chain';
 import TestConfigs from '../testUtils/TestConfigs';
 import TestUtils from '../testUtils/TestUtils';
+import PublicStatusHandler from '../../src/handlers/PublicStatusHandler';
 
 describe('DatabaseActions', () => {
   beforeEach(async () => {
@@ -833,6 +834,68 @@ describe('DatabaseActions', () => {
         tx.signFailedCount,
       ]);
       expect(dbTxs).toEqual([[tx.txId, 0]]);
+    });
+  });
+
+  describe('updatePublicEventStatus', () => {
+    /**
+     * @target DatabaseAction.updatePublicEventStatus should catch errors thrown by PublicStatusHandler.updatePublicEventStatus
+     * @dependencies
+     * @scenario
+     * - stub PublicStatusHandler.updatePublicEventStatus to throw an error
+     * - call updatePublicEventStatus
+     * @expected
+     * - should not have thrown
+     * - updatePublicEventStatusSpy should have been called
+     */
+    it('should catch errors thrown by PublicStatusHandler.updatePublicEventStatus', async () => {
+      // arrange
+      const updatePublicEventStatusSpy = vi
+        .spyOn(PublicStatusHandler.getInstance(), 'updatePublicEventStatus')
+        .mockRejectedValue('custom-error');
+
+      // act
+      DatabaseActionMock.testDatabase.updatePublicEventStatus(
+        'eventId',
+        EventStatus.inReward
+      );
+
+      // assert
+      expect(updatePublicEventStatusSpy).toHaveBeenCalledWith(
+        'eventId',
+        EventStatus.inReward
+      );
+    });
+  });
+
+  describe('updatePublicTxStatus', () => {
+    /**
+     * @target DatabaseAction.updatePublicTxStatus should catch errors thrown by PublicStatusHandler.updatePublicTxStatus
+     * @dependencies
+     * @scenario
+     * - stub PublicStatusHandler.updatePublicTxStatus to throw an error
+     * - call updatePublicTxStatus
+     * @expected
+     * - should not have thrown
+     * - updatePublicTxStatusSpy should have been called
+     */
+    it('should catch errors thrown by PublicStatusHandler.updatePublicTxStatus', async () => {
+      // arrange
+      const updatePublicTxStatusSpy = vi
+        .spyOn(PublicStatusHandler.getInstance(), 'updatePublicTxStatus')
+        .mockRejectedValue('custom-error');
+
+      // act
+      DatabaseActionMock.testDatabase.updatePublicTxStatus(
+        'eventId',
+        EventStatus.inReward
+      );
+
+      // assert
+      expect(updatePublicTxStatusSpy).toHaveBeenCalledWith(
+        'eventId',
+        EventStatus.inReward
+      );
     });
   });
 });
