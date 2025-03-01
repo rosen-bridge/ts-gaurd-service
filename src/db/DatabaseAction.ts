@@ -1026,7 +1026,18 @@ class DatabaseAction {
         status
       );
     } catch (error) {
-      // TODO: log?
+      const errorMessage =
+        error instanceof Error
+          ? error.message.toString()
+          : JSON.stringify(error);
+
+      logger.error(
+        `An error occurred while submitting event status, error: ${errorMessage}`
+      );
+
+      if (error instanceof Error && error.stack) {
+        logger.error(error.stack);
+      }
     }
   };
 
@@ -1042,7 +1053,18 @@ class DatabaseAction {
         txStatus
       );
     } catch (error) {
-      // TODO: log?
+      const errorMessage =
+        error instanceof Error
+          ? error.message.toString()
+          : JSON.stringify(error);
+
+      logger.error(
+        `An error occurred while submitting event status, error: ${errorMessage}`
+      );
+
+      if (error instanceof Error && error.stack) {
+        logger.error(error.stack);
+      }
     }
   };
 }
